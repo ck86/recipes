@@ -14,6 +14,8 @@ class Kernel extends BaseKernel
 
     const CONFIG_EXTS = '.{php,xml,yaml,yml}';
 
+    const CONFIG_DIR = '%CONFIG_DIR%';
+
     public function getCacheDir()
     {
         return $this->getProjectDir().'/var/cache/'.$this->environment;
@@ -24,9 +26,14 @@ class Kernel extends BaseKernel
         return $this->getProjectDir().'/var/log';
     }
 
+    public function getConfigDir()
+    {
+        return $this->getProjectDir().'/'.trim(self::CONFIG_DIR, '/');
+    }
+
     public function registerBundles()
     {
-        $contents = require $this->getProjectDir().'/config/bundles.php';
+        $contents = require $this->getConfigDir().'/bundles.php';
         foreach ($contents as $class => $envs) {
             if (isset($envs['all']) || isset($envs[$this->environment])) {
                 yield new $class();
@@ -40,7 +47,7 @@ class Kernel extends BaseKernel
         // if you are using symfony/dependency-injection 4.0+ as it's the default behavior
         $container->setParameter('container.autowiring.strict_mode', true);
         $container->setParameter('container.dumper.inline_class_loader', true);
-        $confDir = $this->getProjectDir().'/config';
+        $confDir = $this->getConfigDir();
 
         $loader->load($confDir.'/{packages}/*'.self::CONFIG_EXTS, 'glob');
         $loader->load($confDir.'/{packages}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
@@ -50,7 +57,7 @@ class Kernel extends BaseKernel
 
     protected function configureRoutes(RouteCollectionBuilder $routes)
     {
-        $confDir = $this->getProjectDir().'/config';
+        $confDir = $this->getConfigDir();
 
         $routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
         $routes->import($confDir.'/{routes}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, '/', 'glob');
